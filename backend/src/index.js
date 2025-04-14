@@ -18,6 +18,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use("/uploads", express.static(path.resolve("src/uploads")));
 app.use(express.urlencoded({extended:true}));
+app.use(cors({
+    origin: "http://localhost:5173", 
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 //routes
 app.use("/api/users",userRoute);

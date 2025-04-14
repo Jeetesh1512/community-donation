@@ -5,14 +5,8 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     phone: { type: String, required: true }, 
-    address: {
-        street: String,
-        city: String,
-        state: String,
-        country: String,
-        zip: String,
-        coordinates: { lat: Number, lng: Number },
-    },
+    address: String,
+    coordinates: { lat: Number, lng: Number },
     isAdmin: {
         type: Boolean,
         default: false,

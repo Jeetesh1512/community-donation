@@ -5,7 +5,7 @@ require("dotenv").config();
 
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role, phone, address, isAdmin } = req.body;
+        const { name, email, password, phone, address, isAdmin, coordinates } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -18,10 +18,13 @@ const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role,
             phone,
             address,
-            isAdmin
+            coordinates: {
+                lat: coordinates.lat,
+                lng: coordinates.lng,
+            },
+            isAdmin: isAdmin,
         });
 
         generateToken(res, newUser);
