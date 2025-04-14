@@ -30,11 +30,7 @@ const getTransaction = async (req, res) => {
     try {
         const { transactionId } = req.params;
 
-        const transaction = await Transaction.findById(transactionId)
-            .populate({
-                path: 'pickupDetails', 
-                select: 'proposedBy location status' 
-            });
+        const transaction = await Transaction.findById(transactionId);
 
         if (!transaction) {
             return res.status(404).json({ message: "Transaction not found" });
@@ -84,7 +80,7 @@ const cancelTransaction = async (req, res) => {
 const proposePickup = async (req, res) => {
     try {
         const { transactionId } = req.params;
-        const { location } = req.body;
+        const { location, pickupDateTime } = req.body;
         const userId = req.user.id;
 
         const transaction = await Transaction.findById(transactionId);
@@ -94,6 +90,7 @@ const proposePickup = async (req, res) => {
         transaction.pickupDetails = {
             proposedBy: userId,
             location,
+            pickupDateTime: new Date(pickupDateTime),
             status: "pending"
         };
 

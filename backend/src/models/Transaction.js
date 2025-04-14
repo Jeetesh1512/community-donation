@@ -14,6 +14,7 @@ const TransactionSchema = new mongoose.Schema({
             lng: Number,
             address: String,
         },
+        pickupDateTime: { type: Date },
         status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" }
     },
     transactionDate: { type: Date, default: Date.now },
