@@ -45,50 +45,60 @@ const createRequest = async (req, res) => {
 
 const getRequests = async (req, res) => {
     try {
-        const requests = await Request.find().populate("userId", "name email address");
+        const requests = await Request.find({ status: "pending" }).populate("userId", "name email address");
         res.json(requests);
     } catch (error) {
         res.status(500).json({ message: "Error fetching requests", error });
     }
 };
 
+
 const getRequestsByFilters = async (req, res) => {
     try {
         const donor = await User.findById(req.user._id);
-        if (!donor || !donor.address?.coordinates) {
+        if (!donor || !donor.coordinates) {
             return res.status(400).json({ message: "User location not found" });
         }
 
-        const donorLat = donor.address.coordinates.lat;
-        const donorLng = donor.address.coordinates.lng;
+        const donorLat = donor.coordinates.lat;
+        const donorLng = donor.coordinates.lng;
 
         const { condition = "any", urgency = "medium", maxDistance = 50000, page = 1, limit = 10 } = req.query;
 
-        // Build the filtering conditions
-        const filterConditions = { condition, urgency, status: "pending" };
+        const filterConditions = {
+            urgency,
+            status: "pending",
+        };
+
+        if (condition !== "any") {
+            filterConditions.condition = condition;
+        }
 
         let requests = await Request.find(filterConditions).populate("userId", "name");
 
         const calculateDistance = (lat1, lon1, lat2, lon2) => {
             const toRad = (angle) => (angle * Math.PI) / 180;
-            const R = 6371; 
+            const R = 6371; // Radius of Earth in km
 
             const dLat = toRad(lat2 - lat1);
             const dLon = toRad(lon2 - lon1);
             const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) ** 2;
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
+            return R * c * 1000; // convert to meters
         };
 
+        // Calculate distance using request.coordinates
         requests = requests.map((request) => {
-            if (request.userId?.address?.coordinates) {
+            const coords = request.coordinates;
+            if (coords && coords.lat != null && coords.lng != null) {
                 request._doc.distance = calculateDistance(
                     donorLat,
                     donorLng,
-                    request.userId.address.coordinates.lat,
-                    request.userId.address.coordinates.lng
+                    coords.lat,
+                    coords.lng
                 );
             } else {
                 request._doc.distance = Infinity;
@@ -96,9 +106,9 @@ const getRequestsByFilters = async (req, res) => {
             return request;
         });
 
-        // Filter by distance
+        // Filter by max distance
         const maxDistanceNum = parseFloat(maxDistance);
-        requests = requests.filter(request => request._doc.distance <= maxDistanceNum);
+        requests = requests.filter(req => req._doc.distance <= maxDistanceNum);
 
         // Sort by distance
         requests.sort((a, b) => a._doc.distance - b._doc.distance);
@@ -114,10 +124,10 @@ const getRequestsByFilters = async (req, res) => {
             requests: paginatedRequests
         });
     } catch (error) {
+        console.error("Error fetching requests:", error);
         res.status(500).json({ message: "Error fetching requests", error });
     }
 };
-
 
 
 const getMatchingDonations = async (req, res) => {
@@ -200,9 +210,9 @@ const getMatchingDonations = async (req, res) => {
             const a =
                 Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(toRad(lat1)) *
-                    Math.cos(toRad(lat2)) *
-                    Math.sin(dLon / 2) *
-                    Math.sin(dLon / 2);
+                Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) *
+                Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         };

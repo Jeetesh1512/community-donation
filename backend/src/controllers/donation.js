@@ -66,6 +66,33 @@ const createDonation = async (req, res) => {
     }
 };
 
+const getDonation = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const donation = await Donation.findById(id)
+            .populate({
+                path: "itemId",
+                model: "Item"
+            })
+            .populate({
+                path: "donorId",
+                model: "User",
+                select: "name email coordinates"
+            });
+
+        if (!donation) {
+            return res.status(404).json({ message: "Donation not found" });
+        }
+
+        res.json(donation);
+    } catch (error) {
+        console.error("Error fetching donation by ID:", error);
+        res.status(500).json({ message: "Error fetching donation", error });
+    }
+};
+
+
 const getDonations = async (req, res) => {
     try {
         const {
@@ -168,5 +195,6 @@ const getDonations = async (req, res) => {
 
 module.exports = {
     createDonation,
-    getDonations
+    getDonations,
+    getDonation
 };

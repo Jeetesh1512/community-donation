@@ -8,6 +8,7 @@ import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import FrontPage from "./pages/FrontPage/FrontPage";
 import Signup from "./pages/Signup/Signup";
 import Home from "./pages/Home/Home";
+import RequestDonation from "./pages/RequestDonation/RequestDonation"
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -72,6 +73,10 @@ function App() {
           <Route
             path="/home"
             element={authenticated ? <Home /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/:id/request"
+            element = {authenticated ? <RequestDonation/> :  <Navigate to="/" />}
           />
         </Routes>
       </BrowserRouter>

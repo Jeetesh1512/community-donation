@@ -7,10 +7,14 @@ const getImpactStats = async (req, res) => {
     try {
         // Count total donations
         const totalDonations = await Donation.countDocuments({});
-        
+
         // Count total people helped (Transactions with "completed" status)
-        const totalPeopleHelped = await Transaction.countDocuments({ status: "completed" });
-        
+        const distinctRecipients = await Transaction.distinct("recipientId", {
+            status: { $in: ["completed", "pickup_arranged"] }
+        });
+
+        const totalPeopleHelped = distinctRecipients.length;
+
         // Count total distinct donors
         const totalDonors = await Donation.distinct("donorId").countDocuments({});
 

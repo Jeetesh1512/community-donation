@@ -1,11 +1,12 @@
+import Notifications from "../Notifications/Notifications";
 import "./UserInfo.css";
 
 function UserInfo() {
-    return (
-        <>
-            <h1>User Info</h1>
-        </>
-    )
+  return (
+    <>
+      <Notifications />
+    </>
+  );
 }
 
 export default UserInfo;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import "./Donations.css";
 
@@ -10,6 +11,7 @@ function Donations() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
 
   const fetchDonations = async () => {
     try {
@@ -99,7 +101,7 @@ function Donations() {
                 <h3>{donation.itemId?.name}</h3>
                 <p>{donation.itemId?.description}</p>
                 <p><strong>Condition:</strong> {donation.itemId?.condition}</p>
-                <button className="btn">Request</button>
+                <button className="btn" onClick={() => navigate(`/${donation._id}/request`)}>Request</button>
               </div>
             ))
           )}

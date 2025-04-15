@@ -1,6 +1,7 @@
 const Transaction = require("../models/Transaction");
 const Request = require("../models/Request");
 const User = require("../models/User");
+const Notification = require("../models/Notification")
 
 const createTransaction = async (req, res) => {
   try {
@@ -73,6 +74,10 @@ const proposePickup = async (req, res) => {
     const transaction = await Transaction.findById(transactionId);
     if (!transaction) return res.status(404).json({ message: "Transaction not found" });
 
+    // Get the user's name
+    const user = await User.findById(userId);
+    const userName = user?.name || "Someone";
+
     transaction.pickupDetails = {
       proposedBy: userId,
       location,
@@ -82,10 +87,18 @@ const proposePickup = async (req, res) => {
 
     await transaction.save();
 
-    // Get io from app instance
+    const notification = new Notification({
+      userId: transaction.donorId,
+      message: `New pickup proposed by ${userName}`,
+      transactionId: transaction._id,
+      type: "pickupProposal",
+    });
+
+    await notification.save();
+
     const io = req.app.get("io");
     io.to(transaction.donorId.toString()).emit("pickupProposalNotification", {
-      message: "New pickup proposed!",
+      message: `New pickup proposed by ${userName}!`,
       transactionId: transaction._id,
       location,
       pickupDateTime,
@@ -96,6 +109,7 @@ const proposePickup = async (req, res) => {
     res.status(500).json({ message: "Error proposing pickup", error });
   }
 };
+
 
 const respondToPickup = async (req, res) => {
   try {
@@ -113,14 +127,40 @@ const respondToPickup = async (req, res) => {
 
     if (response === "accepted") {
       transaction.status = "pickup_arranged";
+
+      const request = await Request.findById(transaction.requestId);
+      if (request) {
+        request.status = "matched";
+        await request.save(); 
+      }
     }
 
     await transaction.save();
+
+    const proposerId = transaction.pickupDetails.proposedBy?.toString();
+
+    const notification = new Notification({
+      userId: proposerId,
+      message: `Your pickup proposal has been ${response}`,
+      transactionId: transaction._id,
+      type: "responseToPickup",
+    });
+
+    await notification.save();
+
+    const io = req.app.get("io");
+    io.to(proposerId).emit("pickupResponseNotification", {
+      message: `Pickup proposal ${response}`,
+      transactionId: transaction._id,
+      response,
+    });
+
     res.status(200).json({ message: `Pickup ${response}`, transaction });
   } catch (error) {
     res.status(500).json({ message: "Error responding to pickup", error });
   }
 };
+
 
 const completeTransaction = async (req, res) => {
   try {
