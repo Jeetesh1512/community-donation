@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   const checkAuth = async () => {
     try {
@@ -19,16 +20,19 @@ export const AuthProvider = ({ children }) => {
         setAuthenticated(true);
         setUser(response.data.user || null);
         setIsAdmin(response.data.user?.isAdmin || false);
+        setUserId(response.data.user?._id);
       } else {
         setAuthenticated(false);
         setUser(null);
         setIsAdmin(false);
+        setUserId(null);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
       setAuthenticated(false);
       setUser(null);
       setIsAdmin(false);
+      setUserId(null);
     } finally {
       setLoading(false);
     }
@@ -40,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ authenticated, setAuthenticated, isAdmin, user, setUser, checkAuth, loading }}
+      value={{ authenticated, setAuthenticated, isAdmin, user, setUser, checkAuth, loading, userId }}
     >
       {children}
     </AuthContext.Provider>

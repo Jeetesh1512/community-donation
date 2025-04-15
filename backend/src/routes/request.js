@@ -3,16 +3,16 @@ const {
     createRequest, 
     getRequests,
     getMatchingDonations,
-    getRequestsByLocation
+    getRequestsByFilters
     } = require("../controllers/request");
 const { authMiddleware } = require("../middlewares/auth");
 
 const router = express.Router();
 
 router.get("/", getRequests);
-router.post("/", authMiddleware, createRequest);
+router.post("/createRequest", authMiddleware, createRequest);
 router.get("/matching-donations/:id", authMiddleware, getMatchingDonations);
-router.get("/nearbyRequests",authMiddleware,getRequestsByLocation);
+router.get("/getRequests",authMiddleware,getRequestsByFilters);
 
 
 module.exports = router;

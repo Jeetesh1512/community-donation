@@ -38,6 +38,15 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (
+      !formData.address ||
+      !formData.coordinates.lat ||
+      !formData.coordinates.lng
+    ) {
+      alert("Address and coordinates are required.");
+      return;
+    }
+
     try {
       const payload = {
         name: formData.name,

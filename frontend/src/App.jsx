@@ -8,17 +8,19 @@ import AdminDashboard from "./pages/AdminDashboard/AdminDashboard";
 import FrontPage from "./pages/FrontPage/FrontPage";
 import Signup from "./pages/Signup/Signup";
 import Home from "./pages/Home/Home";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 axios.defaults.withCredentials = true;
 
 function App() {
-
   const { authenticated, isAdmin, loading } = useContext(AuthContext);
 
   if (loading) return <p>Loading...</p>;
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={5000} />
       <BrowserRouter>
         <Routes>
           <Route

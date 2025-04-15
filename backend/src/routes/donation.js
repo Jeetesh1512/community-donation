@@ -5,7 +5,7 @@ const {upload} = require("../middlewares/cloudinary");
 
 const router = express.Router();
 
-router.get("/donations", getDonations);
-router.post("/donate", authMiddleware,upload.array("images", 5), createDonation);
+router.get("/", authMiddleware,getDonations);
+router.post("/donate", authMiddleware,upload.array("images", 3), createDonation);
 
 module.exports = router;

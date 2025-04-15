@@ -1,5 +1,7 @@
 const Transaction = require("../models/Transaction");
+const Request = require("../models/Request");
 const User = require("../models/User");
+const { io } = require("../index");
 
 
 const createTransaction = async (req, res) => {
@@ -46,7 +48,7 @@ const getTransaction = async (req, res) => {
                 donationId: transaction.donationId,
                 requestId: transaction.requestId,
                 status: transaction.status,
-                pickupDetails: transaction.pickupDetails, 
+                pickupDetails: transaction.pickupDetails,
                 transactionDate: transaction.transactionDate,
             }
         });
@@ -96,6 +98,13 @@ const proposePickup = async (req, res) => {
 
         await transaction.save();
 
+        io.to(transaction.donorId.toString()).emit("pickupProposalNotification", {
+            message: "New pickup proposed!",
+            transactionId: transaction._id,
+            location,
+            pickupDateTime,
+        });
+
         res.status(200).json({ message: "Pickup proposed", pickupDetails: transaction.pickupDetails });
     } catch (error) {
         res.status(500).json({ message: "Error proposing pickup", error });
@@ -137,11 +146,23 @@ const completeTransaction = async (req, res) => {
         transaction.status = "completed";
         await transaction.save();
 
+        const request = await Request.findById(transaction.requestId);
+        if (request) {
+            request.quantity = Math.max(0, request.quantity - 1);
+
+            if (request.quantity === 0) {
+                request.request = "fulfilled"; 
+            }
+
+            await request.save();
+        }
+
         res.status(200).json({ message: "Transaction marked as completed", transaction });
     } catch (error) {
         res.status(500).json({ message: "Error completing transaction", error });
     }
 };
+
 
 const deleteTransaction = async (req, res) => {
     try {

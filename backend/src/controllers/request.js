@@ -5,14 +5,20 @@ const User = require("../models/User");
 
 const createRequest = async (req, res) => {
     try {
-        const { itemType, description, quantity, condition } = req.body;
+        const { itemType, description, quantity, condition, urgency } = req.body;
+
+        const user = await User.findById(req.user.id);
+        const { lat, lng } = user.coordinates;
+
         const newRequest = new Request({
             userId: req.user.id,
             itemType,
             description,
             quantity,
             condition,
-            status: "pending"
+            urgency,
+            status: "pending",
+            coordinates: { lat, lng }
         });
 
         await newRequest.save();
@@ -36,6 +42,7 @@ const createRequest = async (req, res) => {
     }
 };
 
+
 const getRequests = async (req, res) => {
     try {
         const requests = await Request.find().populate("userId", "name email address");
@@ -45,7 +52,7 @@ const getRequests = async (req, res) => {
     }
 };
 
-const getRequestsByLocation = async (req, res) => {
+const getRequestsByFilters = async (req, res) => {
     try {
         const donor = await User.findById(req.user._id);
         if (!donor || !donor.address?.coordinates) {
@@ -55,7 +62,12 @@ const getRequestsByLocation = async (req, res) => {
         const donorLat = donor.address.coordinates.lat;
         const donorLng = donor.address.coordinates.lng;
 
-        let requests = await Request.find().populate("userId", "name email address");
+        const { condition = "any", urgency = "medium", maxDistance = 50000, page = 1, limit = 10 } = req.query;
+
+        // Build the filtering conditions
+        const filterConditions = { condition, urgency, status: "pending" };
+
+        let requests = await Request.find(filterConditions).populate("userId", "name");
 
         const calculateDistance = (lat1, lon1, lat2, lon2) => {
             const toRad = (angle) => (angle * Math.PI) / 180;
@@ -84,13 +96,28 @@ const getRequestsByLocation = async (req, res) => {
             return request;
         });
 
+        // Filter by distance
+        const maxDistanceNum = parseFloat(maxDistance);
+        requests = requests.filter(request => request._doc.distance <= maxDistanceNum);
+
+        // Sort by distance
         requests.sort((a, b) => a._doc.distance - b._doc.distance);
 
-        res.json(requests);
+        // Pagination
+        const startIndex = (parseInt(page) - 1) * parseInt(limit);
+        const paginatedRequests = requests.slice(startIndex, startIndex + parseInt(limit));
+
+        res.json({
+            totalRequests: requests.length,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            requests: paginatedRequests
+        });
     } catch (error) {
         res.status(500).json({ message: "Error fetching requests", error });
     }
 };
+
 
 
 const getMatchingDonations = async (req, res) => {
@@ -103,15 +130,22 @@ const getMatchingDonations = async (req, res) => {
             return res.status(404).json({ message: "Request not found" });
         }
 
-        const requestLat = request.userId.address.coordinates.lat;
-        const requestLng = request.userId.address.coordinates.lng;
+        const requestLat = request.coordinates.lat;
+        const requestLng = request.coordinates.lng;
 
-        let filter = [];
+        const allConditions = ["new", "like new", "mildly used", "heavily used", "needs repair"];
+
+        let matchCondition = {
+            category: request.itemType,
+            status: "available",
+        };
+
+        const pipeline = [];
 
         if (request.description) {
             const words = request.description.split(/\s+/).filter(word => word.length > 2);
 
-            filter.push({
+            pipeline.push({
                 $search: {
                     index: "items",
                     compound: {
@@ -129,33 +163,28 @@ const getMatchingDonations = async (req, res) => {
             });
         }
 
-        let matchCondition = {
-            category: request.itemType,
-            status: "available",
-        };
+        pipeline.push({ $match: matchCondition });
 
-        if (request.condition.toLowerCase() !== "any") {
-            matchCondition.condition = request.condition.toLowerCase();
-        }
+        const requestedCondition = request.condition.toLowerCase();
 
-        filter.push({ $match: matchCondition });
-
-        filter.push({
+        pipeline.push({
             $addFields: {
                 matchScore: { $meta: "searchScore" },
                 conditionPriority: {
-                    $cond: {
-                        if: { $eq: ["$condition", request.condition.toLowerCase()] },
-                        then: 2,
-                        else: 1
+                    $switch: {
+                        branches: allConditions.map((cond, index) => ({
+                            case: { $eq: ["$condition", cond] },
+                            then: 5 - Math.abs(index - allConditions.indexOf(requestedCondition))
+                        })),
+                        default: 0
                     }
                 }
             }
         });
 
-        filter.push({ $sort: { conditionPriority: -1, matchScore: -1 } });
+        pipeline.push({ $sort: { conditionPriority: -1, matchScore: -1 } });
 
-        const matchingItems = await Item.aggregate(filter);
+        const matchingItems = await Item.aggregate(pipeline);
         if (matchingItems.length === 0) return res.json([]);
 
         let matchingDonations = await Donation.find({
@@ -179,12 +208,12 @@ const getMatchingDonations = async (req, res) => {
         };
 
         matchingDonations = matchingDonations.map((donation) => {
-            if (donation.donorId?.address?.coordinates) {
+            if (donation.donorId?.coordinates) {
                 donation._doc.distance = calculateDistance(
                     requestLat,
                     requestLng,
-                    donation.donorId.address.coordinates.lat,
-                    donation.donorId.address.coordinates.lng
+                    donation.donorId.coordinates.lat,
+                    donation.donorId.coordinates.lng
                 );
             } else {
                 donation._doc.distance = Infinity;
@@ -195,7 +224,7 @@ const getMatchingDonations = async (req, res) => {
         const maxDistanceNum = parseFloat(maxDistance);
         matchingDonations = matchingDonations.filter(donation => donation._doc.distance <= maxDistanceNum);
 
-        matchingDonations.sort((a, b) => a.distance - b.distance);
+        matchingDonations.sort((a, b) => a._doc.distance - b._doc.distance);
 
         const startIndex = (parseInt(page) - 1) * parseInt(limit);
         const paginatedDonations = matchingDonations.slice(startIndex, startIndex + parseInt(limit));
@@ -213,10 +242,9 @@ const getMatchingDonations = async (req, res) => {
 };
 
 
-
 module.exports = {
     createRequest,
     getRequests,
     getMatchingDonations,
-    getRequestsByLocation
+    getRequestsByFilters
 };
