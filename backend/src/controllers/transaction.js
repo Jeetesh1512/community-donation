@@ -2,6 +2,7 @@ const Transaction = require("../models/Transaction");
 const Request = require("../models/Request");
 const User = require("../models/User");
 const Notification = require("../models/Notification")
+const { sendNotificationEmail } = require("../utils/mailer.js");
 
 const createTransaction = async (req, res) => {
   try {
@@ -74,7 +75,6 @@ const proposePickup = async (req, res) => {
     const transaction = await Transaction.findById(transactionId);
     if (!transaction) return res.status(404).json({ message: "Transaction not found" });
 
-    // Get the user's name
     const user = await User.findById(userId);
     const userName = user?.name || "Someone";
 
@@ -86,6 +86,8 @@ const proposePickup = async (req, res) => {
     };
 
     await transaction.save();
+
+    const donor = await User.findById(transaction.donorId);
 
     const notification = new Notification({
       userId: transaction.donorId,
@@ -103,6 +105,14 @@ const proposePickup = async (req, res) => {
       location,
       pickupDateTime,
     });
+
+    console.log(location);
+
+    if (donor?.email) {
+      const subject = "New Pickup Proposal for Your Donation";
+      const text = `${userName} has proposed a pickup.\n\nPickup Location: ${location.address}\nPickup Date & Time: ${new Date(pickupDateTime).toLocaleString()}\n\nPlease log in to respond.`;
+      await sendNotificationEmail(donor.email, subject, text);
+    }
 
     res.status(200).json({ message: "Pickup proposed", pickupDetails: transaction.pickupDetails });
   } catch (error) {
@@ -131,13 +141,14 @@ const respondToPickup = async (req, res) => {
       const request = await Request.findById(transaction.requestId);
       if (request) {
         request.status = "matched";
-        await request.save(); 
+        await request.save();
       }
     }
 
     await transaction.save();
 
     const proposerId = transaction.pickupDetails.proposedBy?.toString();
+    const proposer = await User.findById(proposerId);
 
     const notification = new Notification({
       userId: proposerId,
@@ -155,11 +166,18 @@ const respondToPickup = async (req, res) => {
       response,
     });
 
+    if (proposer?.email) {
+      const subject = `Pickup Proposal ${response}`;
+      const text = `Hi ${proposer.name || "User"},\n\nYour pickup proposal for transaction ${transaction._id} has been ${response} by the donor.\n\nStatus: ${transaction.status}\n\nPlease log in to view more details.`;
+      await sendNotificationEmail(proposer.email, subject, text);
+    }
+
     res.status(200).json({ message: `Pickup ${response}`, transaction });
   } catch (error) {
     res.status(500).json({ message: "Error responding to pickup", error });
   }
 };
+
 
 
 const completeTransaction = async (req, res) => {
