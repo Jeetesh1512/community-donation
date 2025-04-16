@@ -1,6 +1,7 @@
 const Donation = require("../models/Donation");
 const Item = require("../models/Item");
 const User = require("../models/User.js")
+const Request = require("../models/Request.js")
 const { cloudinary } = require("../middlewares/cloudinary.js");
 
 const createDonation = async (req, res) => {
@@ -37,7 +38,10 @@ const createDonation = async (req, res) => {
         const donation = new Donation({
             donorId: req.user.id,
             itemId: item._id,
-            coordinates: { lat, lng },
+            coordinates: {
+                type: "Point",
+                coordinates: [lng, lat]
+            },
             status: "pending"
         });
 
@@ -55,16 +59,84 @@ const createDonation = async (req, res) => {
                         status: "pending"
                     }
                 }
-            },
-            { new: true }
+            }
         );
 
+        const maxDistanceInMeters = 1000000; // 10km
+
+        const matchingRequests = await Request.find({
+            itemType: category,
+            status: "pending",
+            coordinates: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [lng, lat]
+                    },
+                    $maxDistance: maxDistanceInMeters
+                }
+            }
+        }).populate("userId");
+
+        for (let request of matchingRequests) {
+            const requester = request.userId;
+
+            if (requester?.email) {
+                await sendNotificationEmail(
+                    requester.email,
+                    "🎁 A donation matches your request!",
+                    `
+Hi ${requester.name},
+
+Good news! A new donation matches your request for "${request.itemType}".
+
+🎁 Donation Details:
+- Item: ${item.name}
+- Condition: ${item.condition}
+- Quantity: ${item.quantity}
+
+📍 Donor's Location: ${donor.address}
+
+You can now propose a pickup location and date.
+
+Thanks for being part of our community!
+                    `
+                );
+            }
+
+            if (donor.email) {
+                await sendNotificationEmail(
+                    donor.email,
+                    "🧡 Your donation has been matched!",
+                    `
+Hi ${donor.name},
+
+Your donation "${item.name}" was just matched with someone in need!
+
+📝 Request Details:
+- Item Type: ${request.itemType}
+- Description: ${request.description || "No details provided"}
+- Quantity Needed: ${request.quantity}
+- Urgency: ${request.urgency.toUpperCase()}
+
+📍 Requester Location: ${requester.address}
+
+Please check your dashboard to view the request and respond.
+
+Thank you for your generosity!
+                    `
+                );
+            }
+        }
+
         res.status(201).json({ message: "Donation created successfully", donation });
+
     } catch (error) {
         console.error("Error creating donation:", error);
         res.status(500).json({ message: "Error creating donation", error });
     }
 };
+
 
 const getDonation = async (req, res) => {
     try {

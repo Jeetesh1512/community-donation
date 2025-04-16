@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 
 function RequestForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     itemType: "",
     quantity: 1,
@@ -26,6 +27,7 @@ function RequestForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/requests/createRequest`,
@@ -39,6 +41,8 @@ function RequestForm() {
     } catch (err) {
       console.error("Error creating request:", err);
       alert("Failed to create request");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -116,10 +120,12 @@ function RequestForm() {
                           height={30}
                           fill="currentColor"
                         >
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 
+                          <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 
                           10-4.48 10-10S17.52 2 12 2zm-2 
                           15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 
-                          8l-9 9z" />
+                          8l-9 9z"
+                          />
                         </svg>
                       </div>
                       <h3>
@@ -178,9 +184,11 @@ function RequestForm() {
                         height={30}
                         fill="currentColor"
                       >
-                        <path d="M12 2C6.48 2 2 6.48 2 
+                        <path
+                          d="M12 2C6.48 2 2 6.48 2 
                         12s4.48 10 10 10 10-4.48 
-                        10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                        10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                        />
                       </svg>
                     </div>
                     <h3>
@@ -207,8 +215,8 @@ function RequestForm() {
               <button type="button" className="btn btn-outline" id="cancelBtn">
                 Cancel
               </button>
-              <button type="submit" className="btn" id="submitRequest">
-                Continue
+              <button type="submit" disabled={isSubmitting} className="btn">
+                {isSubmitting ? "Creating request..." : "Submit"}
               </button>
             </div>
           </form>

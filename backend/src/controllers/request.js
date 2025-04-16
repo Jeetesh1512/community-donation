@@ -2,6 +2,7 @@ const Item = require("../models/Item");
 const Request = require("../models/Request");
 const Donation = require("../models/Donation");
 const User = require("../models/User");
+const { sendNotificationEmail } = require("../utils/mailer");
 
 const createRequest = async (req, res) => {
     try {
@@ -17,8 +18,10 @@ const createRequest = async (req, res) => {
             quantity,
             condition,
             urgency,
-            status: "pending",
-            coordinates: { lat, lng }
+            coordinates: {
+                type: "Point",
+                coordinates: [lng, lat]
+            }
         });
 
         await newRequest.save();
@@ -32,12 +35,82 @@ const createRequest = async (req, res) => {
                         status: "pending"
                     }
                 }
-            },
-            { new: true }
+            }
         );
 
+        const maxDistanceInMeters = 1000000; 
+
+        const matchingDonations = await Donation.find({
+            status: "pending",
+            coordinates: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [lng, lat]
+                    },
+                    $maxDistance: maxDistanceInMeters
+                }
+            }
+        }).populate({
+            path: "itemId",
+            match: { category: itemType }
+        }).populate("donorId");
+
+        for (let donation of matchingDonations) {
+            if (!donation.itemId) continue; // skip non-matching category
+
+            if (donation.donorId?.email) {
+                await sendNotificationEmail(
+                    donation.donorId.email,
+                    "🚨 Someone needs your donation!",
+                    `
+Hi ${donation.donorId.name},
+
+Your donation "${donation.itemId.name}" has been matched with a nearby request.
+
+📝 Request Details:
+- Description: ${newRequest.description || "No additional details provided"}
+- Quantity Needed: ${newRequest.quantity}
+- Urgency: ${newRequest.urgency.toUpperCase()}
+
+📍 Requester Location: ${user.address}
+
+Please log in to your account to respond to the request.
+
+Thank you,  
+The Community Donation Platform Team
+                    `
+                );
+            }
+
+            if (user.email) {
+                await sendNotificationEmail(
+                    user.email,
+                    "🎁 A donation matches your request!",
+                    `
+Hi ${user.name},
+
+We found a donation that matches your request for "${itemType}".
+
+🎁 Donation Details:
+- Item: ${donation.itemId.name}
+- Condition: ${donation.itemId.condition}
+- Quantity: ${donation.itemId.quantity}
+
+📍 Donor Location: ${donation.donorId.address}
+
+You can now propose a pickup location and date.
+
+Thanks for being part of our community!
+                    `
+                );
+            }
+        }
+
         res.status(201).json({ message: "Request created successfully", request: newRequest });
+
     } catch (error) {
+        console.error("Error creating request:", error);
         res.status(500).json({ message: "Error creating request", error });
     }
 };

@@ -9,10 +9,19 @@ const RequestSchema = new mongoose.Schema({
     status: { type: String, enum: ["pending", "matched", "completed"], default: "pending" },
     urgency: { type: String, enum: ["low", "medium", "high"], default: "medium" },
     coordinates: {
-        lat: { type: Number, required: true },
-        lng: { type: Number, required: true }
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates: {
+            type: [Number], // [lng, lat]
+            required: true
+        }
     },
     createdAt: { type: Date, default: Date.now }
 });
+
+RequestSchema.index({ coordinates: "2dsphere" });
 
 module.exports = mongoose.model("Request", RequestSchema);

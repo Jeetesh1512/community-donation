@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 
 function DonationForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -55,7 +56,7 @@ function DonationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setIsSubmitting(true);
     const data = new FormData();
     data.append("name", formData.name);
     data.append("category", formData.category);
@@ -82,6 +83,8 @@ function DonationForm() {
     } catch (error) {
       console.error("Error creating donation:", error);
       alert("Failed to create donation.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -212,8 +215,8 @@ function DonationForm() {
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="btn">
-                Continue
+              <button type="submit" disabled={isSubmitting} className="btn">
+                {isSubmitting ? "Creating Donation..." : "Submit"}
               </button>
             </div>
           </form>
