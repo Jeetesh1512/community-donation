@@ -1,0 +1,85 @@
+.notifications-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 2rem auto;
+    background: var(--secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  .notifications-container h3 {
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+    text-align: center;
+    font-size: 1.8rem;
+  }
+  
+  .notification-card {
+    background: var(--light);
+    border: 1px solid var(--gray);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .notification-card p {
+    margin: 0.5rem 0;
+  }
+  
+  .notification-card small {
+    color: var(--dark-gray);
+    font-size: 0.85rem;
+  }
+  
+  .pickup-details {
+    background: var(--gray);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+  
+  .pickup-details p {
+    margin: 0.3rem 0;
+  }
+  
+  .notification-card button {
+    margin-top: 0.8rem;
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s ease;
+  }
+  
+  .notification-card button:hover {
+    opacity: 0.9;
+  }
+  
+  .notification-card button:nth-child(1) {
+    background: var(--primary);
+    color: var(--light);
+  }
+  
+  .notification-card button:nth-child(2) {
+    background: var(--dark-gray);
+    color: var(--light);
+  }
+  
+  .mark-read-btn {
+    background: var(--primary);
+    color: var(--light);
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.3s ease;
+  }
+  
+  .mark-read-btn:hover {
+    background: #8f2048;
+  }
+  

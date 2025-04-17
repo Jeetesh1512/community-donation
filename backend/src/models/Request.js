@@ -5,22 +5,24 @@ const RequestSchema = new mongoose.Schema({
     itemType: { type: String, required: true },
     description: { type: String },
     quantity: { type: Number, required: true },
+    fulfilledQuantity: { type: Number, default: 0 },
+    isCompleted: { type: Boolean, default: false },
     condition: { type: String, enum: ["new", "used", "any"], default: "any" },
-    status: { type: String, enum: ["pending", "matched", "completed"], default: "pending" },
     urgency: { type: String, enum: ["low", "medium", "high"], default: "medium" },
     coordinates: {
         type: {
             type: String,
-            enum: ['Point'],
-            required: true
+            enum: ["Point"],
+            required: true,
         },
         coordinates: {
             type: [Number], // [lng, lat]
-            required: true
-        }
+            required: true,
+        },
     },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
 });
+
 
 RequestSchema.index({ coordinates: "2dsphere" });
 

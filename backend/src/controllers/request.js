@@ -32,7 +32,6 @@ const createRequest = async (req, res) => {
                 $push: {
                     requests: {
                         itemId: newRequest._id,
-                        status: "pending"
                     }
                 }
             }
@@ -118,7 +117,7 @@ Thanks for being part of our community!
 
 const getRequests = async (req, res) => {
     try {
-        const requests = await Request.find({ status: "pending" }).populate("userId", "name email address");
+        const requests = await Request.find({ isCompleted:false }).populate("userId", "name email address");
         res.json(requests);
     } catch (error) {
         res.status(500).json({ message: "Error fetching requests", error });
@@ -140,7 +139,7 @@ const getRequestsByFilters = async (req, res) => {
 
         const filterConditions = {
             urgency,
-            status: "pending",
+            isCompleted:false,
         };
 
         if (condition !== "any") {

@@ -1,10 +1,9 @@
-import Notifications from "../Notifications/Notifications";
 import "./UserInfo.css";
 
 function UserInfo() {
   return (
     <>
-      <Notifications />
+      <h1>User Info</h1>
     </>
   );
 }

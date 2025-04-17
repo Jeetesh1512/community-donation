@@ -106,8 +106,6 @@ const proposePickup = async (req, res) => {
       pickupDateTime,
     });
 
-    console.log(location);
-
     if (donor?.email) {
       const subject = "New Pickup Proposal for Your Donation";
       const text = `${userName} has proposed a pickup.\n\nPickup Location: ${location.address}\nPickup Date & Time: ${new Date(pickupDateTime).toLocaleString()}\n\nPlease log in to respond.`;
@@ -191,10 +189,12 @@ const completeTransaction = async (req, res) => {
 
     const request = await Request.findById(transaction.requestId);
     if (request) {
-      request.quantity = Math.max(0, request.quantity - 1);
-      if (request.quantity === 0) {
-        request.request = "fulfilled";
+      request.fulfilledQuantity += 1;
+
+      if (request.fulfilledQuantity >= request.quantity) {
+        request.isCompleted = true;
       }
+
       await request.save();
     }
 
@@ -203,6 +203,7 @@ const completeTransaction = async (req, res) => {
     res.status(500).json({ message: "Error completing transaction", error });
   }
 };
+
 
 const deleteTransaction = async (req, res) => {
   try {

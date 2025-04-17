@@ -51,9 +51,18 @@ function Navbar({ activeTab, setActiveTab }) {
           >
             Request
           </a>
-          <a onClick={() => setActiveTab("userInfo")} className={`small-tab ${
-              activeTab === "userInfo" ? "active" : ""
-            }`}>
+          <a
+            onClick={() => setActiveTab("notifications")}
+            className={`small-tab ${
+              activeTab === "notifications" ? "active" : ""
+            }`}
+          >
+            <img width={24} height={24} src="/bell.png" alt="Notifications" />
+          </a>
+          <a
+            onClick={() => setActiveTab("userInfo")}
+            className={`small-tab ${activeTab === "userInfo" ? "active" : ""}`}
+          >
             <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor">
               <path
                 d="M12 12c2.21 0 4-1.79 

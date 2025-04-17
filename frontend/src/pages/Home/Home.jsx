@@ -6,6 +6,7 @@ import Requests from "../../components/Requests/Requests";
 import Donations from "../../components/Donations/Donations";
 import UserInfo from "../../components/UserInfo/UserInfo"
 import Impact from "../../components/Impact/Impact";
+import Notifications from "../../components/Notifications/Notifications";
 
 function Home() {
   const [activeTab, setActiveTab] = useState("requests");
@@ -20,6 +21,7 @@ function Home() {
         {activeTab === "requestForm" && <RequestForm />}
         {activeTab === "requests" && <Requests />}
         {activeTab === "donations" && <Donations />}
+        {activeTab === "notifications" && <Notifications />}
         {activeTab === "userInfo" && <UserInfo />}
       </main>
     </>
