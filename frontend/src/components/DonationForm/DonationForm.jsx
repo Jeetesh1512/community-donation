@@ -222,14 +222,6 @@ function DonationForm() {
           </form>
         </div>
       </main>
-
-      <footer>
-        <div className="footer-logo">DonationHub</div>
-        <p className="footer-text">
-          Connecting donors with those in need to give unused items a new
-          purpose.
-        </p>
-      </footer>
     </div>
   );
 }

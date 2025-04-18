@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./FrontPage.css";
+import Impact from "../../components/Impact/Impact";
 
 function FrontPage() {
-  const navigate = useNavigate();
   return (
     <>
       <header>
@@ -17,14 +17,10 @@ function FrontPage() {
             Home
           </a>
           <a href="#donate">Donate</a>
-          <a href="#request">Request</a>
           <a href="#how-it-works">How it works</a>
-          {/* <a href="#">Start donating</a>
-          <a href="#" className="user-icon">
-            <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-          </a> */}
+          <a href="#request">How To Donate</a>
+          <a href="#how-to-request">How To Request</a>
+          <a href="#impact-container">Our Impact</a>
         </nav>
       </header>
 
@@ -38,15 +34,9 @@ function FrontPage() {
               donating items you no longer use.
             </p>
             <div className="btn-group">
-              <a
-                className="btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/login");
-                }}
-              >
+              <Link to="/login" className="btn">
                 Contribute
-              </a>
+              </Link>
             </div>
           </div>
           <div className="hero-image">
@@ -130,16 +120,14 @@ function FrontPage() {
             </div>
           </div>
         </section>
+
         <section id="donate" className="donation-needs">
           <h2>Browse Donation Needs</h2>
           <p>Find individuals and organizations in need of your unused items</p>
           <div className="categories">
-            <a
+            <Link
               className="category"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+              to="/login"
             >
               <div className="category-icon">
                 <svg
@@ -152,12 +140,9 @@ function FrontPage() {
                 </svg>
               </div>
               <span>Clothes</span>
-            </a>
-            <a
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            </Link>
+            <Link
+              to="/login"
               className="category"
             >
               <div className="category-icon">
@@ -171,12 +156,9 @@ function FrontPage() {
                 </svg>
               </div>
               <span>Shoes</span>
-            </a>
-            <a
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            </Link>
+            <Link
+              to="/login"
               className="category"
             >
               <div className="category-icon">
@@ -190,12 +172,9 @@ function FrontPage() {
                 </svg>
               </div>
               <span>Books</span>
-            </a>
-            <a
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            </Link>
+            <Link
+              to="/login"
               className="category"
             >
               <div className="category-icon">
@@ -209,12 +188,9 @@ function FrontPage() {
                 </svg>
               </div>
               <span>Toys</span>
-            </a>
-            <a
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            </Link>
+            <Link
+              to="/login"
               className="category"
             >
               <div className="category-icon">
@@ -228,18 +204,15 @@ function FrontPage() {
                 </svg>
               </div>
               <span>Others</span>
-            </a>
+            </Link>
           </div>
           <div className="search-bar">
             <input
               type="text"
               placeholder="Search by item, location, or organization..."
             />
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/login");
-              }}
+            <Link
+              to="/login"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -249,7 +222,7 @@ function FrontPage() {
               >
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
               </svg>
-            </button>
+            </Link>
           </div>
           <div className="needs-list">
             <div id="clothes" className="need-card">
@@ -264,16 +237,13 @@ function FrontPage() {
                 <div className="progress">
                   <div className="progress-bar" style={{ width: "65%" }} />
                 </div>
-                <a
+                <Link
                   className="btn donate-now-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate("/login");
-                  }}
+                  to="/login"
                   data-id="winter-clothes"
                 >
                   Donate Now
-                </a>
+                </Link>
               </div>
             </div>
             <div id="school-supplies" className="need-card">
@@ -288,16 +258,13 @@ function FrontPage() {
                 <div className="progress">
                   <div className="progress-bar" style={{ width: "40%" }} />
                 </div>
-                <a
+                <Link
                   className="btn donate-now-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate("/login");
-                  }}
+                  to="/login"
                   data-id="school-supplies"
                 >
                   Donate Now
-                </a>
+                </Link>
               </div>
             </div>
             <div id="baby-clothes" className="need-card">
@@ -312,44 +279,19 @@ function FrontPage() {
                 <div className="progress">
                   <div className="progress-bar" style={{ width: "75%" }} />
                 </div>
-                <a
+                <Link
                   className="btn donate-now-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate("/login");
-                  }}
+                  to="/login"
                   data-id="baby-items"
                 >
                   Donate Now
-                </a>
+                </Link>
               </div>
             </div>
           </div>
         </section>
-        <section id="impact" className="impact">
-          <h2>Our Impact So Far</h2>
-          <p>
-            Together, we're making a meaningful difference in communities across
-            the country
-          </p>
-          <div className="stats">
-            <div className="stat">
-              <div className="stat-number">5,280+</div>
-              <div className="stat-text">Items Donated</div>
-            </div>
-            <div className="stat">
-              <div className="stat-number">1,620+</div>
-              <div className="stat-text">Donors</div>
-            </div>
-            <div className="stat">
-              <div className="stat-number">124+</div>
-              <div className="stat-text">Organizations Supported</div>
-            </div>
-            <div className="stat">
-              <div className="stat-number">3,450+</div>
-              <div className="stat-text">People Helped</div>
-            </div>
-          </div>
+        <section id="impact-container">
+          <Impact/>
         </section>
         <section id="request" className="how-to-start">
           <h2>How to Start Donating</h2>
@@ -376,9 +318,48 @@ function FrontPage() {
               <p>Coordinate pickup or drop-off at a convenient location</p>
             </div>
           </div>
-          <a href="#" className="btn" id="start-donating-btn">
+          <Link
+            to="/login"
+            className="btn"
+            id="start-donating-btn"
+          >
             Start Donating Now
-          </a>
+          </Link>
+        </section>
+        <section id="how-to-request" className="how-to-start">
+          <h2>How to Request Items</h2>
+          <p>Follow these simple steps to request items you need</p>
+          <div className="process-steps">
+            <div className="process-step">
+              <div className="step-number">1</div>
+              <h3>Create an Account</h3>
+              <p>Sign up and verify your identity to join our community</p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">2</div>
+              <h3>Specify Item Type</h3>
+              <p>Select the category and details of items you need</p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">3</div>
+              <h3>Explain Your Need</h3>
+              <p>
+                Share your situation and when and why these items would help you
+              </p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">4</div>
+              <h3>Arrange Handover</h3>
+              <p>Coordinate pickup or drop-off at a convenient location</p>
+            </div>
+          </div>
+          <Link
+            to="/login"
+            className="btn"
+            id="start-requesting-btn"
+          >
+            Request Items Now
+          </Link>
         </section>
       </main>
 

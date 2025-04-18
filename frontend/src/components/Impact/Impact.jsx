@@ -7,12 +7,14 @@ function Impact() {
     totalDonations: 0,
     totalPeopleHelped: 0,
     totalDonors: 0,
-    totalQuantityDonated: 0, 
+    totalQuantityDonated: 0,
   });
 
   const fetchImpactStats = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/impact`);
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/impact`
+      );
       setImpactData(data);
     } catch (error) {
       console.error("Error fetching impact data:", error);
@@ -24,24 +26,31 @@ function Impact() {
   }, []);
 
   return (
-    <div className="impact-container">
-      <div className="impact-card">
-        <h2>Total Donations</h2>
-        <p>{impactData.totalDonations}</p>
+    <section id="impact" className="impact">
+      <h2>Our Impact So Far</h2>
+      <p>
+        Together, we're making a meaningful difference in communities across the
+        country
+      </p>
+      <div className="stats">
+        <div className="stat">
+          <div className="stat-number">{impactData.totalQuantityDonated}</div>
+          <div className="stat-text">Items Donated</div>
+        </div>
+        <div className="stat">
+          <div className="stat-number">{impactData.totalDonors}</div>
+          <div className="stat-text">Donors</div>
+        </div>
+        <div className="stat">
+          <div className="stat-number">{impactData.totalDonations}</div>
+          <div className="stat-text">Total Donations</div>
+        </div>
+        <div className="stat">
+          <div className="stat-number">{impactData.totalPeopleHelped}</div>
+          <div className="stat-text">People Helped</div>
+        </div>
       </div>
-      <div className="impact-card">
-        <h2>People Helped</h2>
-        <p>{impactData.totalPeopleHelped}</p>
-      </div>
-      <div className="impact-card">
-        <h2>Total Donors</h2>
-        <p>{impactData.totalDonors}</p>
-      </div>
-      <div className="impact-card">
-        <h2>Total Items Donated</h2>
-        <p>{impactData.totalQuantityDonated}</p> 
-      </div>
-    </div>
+    </section>
   );
 }
 

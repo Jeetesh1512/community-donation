@@ -1,42 +1,39 @@
-.impact-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-    padding: 20px;
-  }
-  
-  .impact-card {
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    text-align: center;
-    transition: all 0.3s ease;
-  }
-  
-  .impact-card:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  .impact-card h2 {
-    font-size: 1rem;
-    color: #333;
-    margin-bottom: 10px;
-    font-weight: 600;
-  }
-  
-  .impact-card p {
-    font-size: 2.5rem; /* Smaller font size */
-    color: #2ecc71; /* Green for positive impact */
-    font-weight: 700;
-    margin: 0;
-    line-height: 1.2;
-  }
-  
-  /* Optional: For larger screens, tweak the grid layout */
-  @media (min-width: 768px) {
-    .impact-container {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  
+.impact {
+  background-color: var(--secondary);
+  padding: 2rem;
+  text-align: center;
+}
+
+.impact h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.impact p {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-text {
+  font-size: 1rem;
+}
