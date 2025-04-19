@@ -46,7 +46,7 @@ const markNotificationAsRead = async (req, res) => {
 
         const notification = await Notification.findByIdAndUpdate(
             notificationId,
-            { status: "read" },  // Update status to "read"
+            { status: "read" },
             { new: true }
         );
 

@@ -13,8 +13,9 @@ const SocketContext = createContext();
 export const SocketProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
   const [socket, setSocket] = useState(null);
-  const [pickupNotifications, setPickupNotifications] = useState([]); 
+  const [pickupNotifications, setPickupNotifications] = useState([]);
 
+  // Connect and join room when user is authenticated
   useEffect(() => {
     if (!user) return;
 
@@ -23,8 +24,16 @@ export const SocketProvider = ({ children }) => {
     });
 
     newSocket.on("connect", () => {
+      console.log("Socket connected");
       newSocket.emit("joinRoom", user._id);
-      console.log("Socket connected & room joined");
+    });
+
+    newSocket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+    });
+
+    newSocket.on("disconnect", (reason) => {
+      console.warn("Socket disconnected:", reason);
     });
 
     setSocket(newSocket);
@@ -35,32 +44,68 @@ export const SocketProvider = ({ children }) => {
     };
   }, [user]);
 
-  const handlePickupProposal = useCallback((data) => {
-    setPickupNotifications((prevNotifications) => [
-      ...prevNotifications,
-      data,
-    ]);
-    console.log(
-      `New pickup proposed!\n ${data.location.address}\n📅 ${new Date(
-        data.pickupDateTime
-      )}`
-    );
-  }, []);
-
+  // Handle general notification
   useEffect(() => {
     if (!socket) return;
 
-    socket
-      .off("pickupProposalNotification")
-      .on("pickupProposalNotification", handlePickupProposal);
+    const handleGeneralNotification = (data) => {
+      setPickupNotifications((prev) => {
+        if (prev.some((n) => n._id === data._id)) return prev;
+        return [...prev, data];
+      });
+    };
+
+    socket.on("notification", handleGeneralNotification);
+
+    return () => {
+      socket.off("notification", handleGeneralNotification);
+    };
+  }, [socket]);
+
+  // Handle pickup proposal notification
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePickupProposal = (data) => {
+      setPickupNotifications((prev) => {
+        if (prev.some((n) => n._id === data._id)) return prev;
+        return [...prev, data];
+      });
+
+      console.log(
+        `📦 New pickup proposed:\n📍 ${data.location?.address}\n📅 ${new Date(
+          data.pickupDateTime
+        ).toLocaleString()}`
+      );
+    };
+
+    socket.on("pickupProposalNotification", handlePickupProposal);
 
     return () => {
       socket.off("pickupProposalNotification", handlePickupProposal);
     };
-  }, [socket, handlePickupProposal]);
+  }, [socket]);
+
+  // Utility: join a room manually (optional)
+  const joinRoom = useCallback(
+    (roomId) => {
+      if (socket) {
+        socket.emit("joinRoom", roomId);
+        console.log(`Manually joined room: ${roomId}`);
+      }
+    },
+    [socket]
+  );
 
   return (
-    <SocketContext.Provider value={{ socket, pickupNotifications, setPickupNotifications }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        pickupNotifications,
+        setPickupNotifications,
+        joinRoom,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Notifications.css";
+import { useSocket } from "../../contexts/SocketContext"; 
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
+  const { pickupNotifications } = useSocket();
 
+  // Initial fetch
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -33,44 +36,67 @@ function Notifications() {
     fetchNotifications();
   }, []);
 
+  // Real-time updates from pickupNotifications
+  useEffect(() => {
+    const fetchPickupDetailsAndAppend = async () => {
+      for (const incoming of pickupNotifications) {
+        try {
+          const transactionRes = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/api/transactions/getTransaction/${incoming.transactionId}`
+          );
+
+          const newNotification = {
+            ...incoming,
+            pickupDetails: transactionRes.data.transaction.pickupDetails,
+          };
+
+          setNotifications((prev) => [newNotification, ...prev]);
+        } catch (error) {
+          console.error("Failed to fetch pickupDetails for real-time notification", error);
+        }
+      }
+    };
+
+    if (pickupNotifications.length > 0) {
+      fetchPickupDetailsAndAppend();
+    }
+  }, [pickupNotifications]);
+
   const handleMarkAsRead = async (notificationId) => {
     try {
       await axios.patch(
-        `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/notifications/${notificationId}/read`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/notifications/${notificationId}/read`,
         { status: "read" }
       );
-      setNotifications(
-        notifications.map((notification) =>
-          notification._id === notificationId
-            ? { ...notification, status: "read" }
-            : notification
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n._id === notificationId ? { ...n, status: "read" } : n
         )
       );
     } catch (error) {
-      console.error("Failed to update notification status", error);
+      console.error("Failed to mark as read", error);
     }
   };
 
   const handleAcceptPickup = async (transactionId) => {
     try {
-      const res = await axios.post(
-        `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/transactions/respondToPickup/${transactionId}`,
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/transactions/respondToPickup/${transactionId}`,
         { response: "accepted" }
       );
-      // Handle the response to update the UI accordingly
-      setNotifications(
-        notifications.map((notification) =>
-          notification.transactionId === transactionId
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.transactionId === transactionId
             ? {
-                ...notification,
+                ...n,
                 message: "Pickup proposal accepted",
                 status: "read",
+                pickupDetails: {
+                  ...n.pickupDetails,
+                  status: "accepted",
+                },
               }
-            : notification
+            : n
         )
       );
     } catch (error) {
@@ -80,22 +106,23 @@ function Notifications() {
 
   const handleRejectPickup = async (transactionId) => {
     try {
-      const res = await axios.post(
-        `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/transactions/respondToPickup/${transactionId}`,
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/transactions/respondToPickup/${transactionId}`,
         { response: "rejected" }
       );
-      // Handle the response to update the UI accordingly
-      setNotifications(
-        notifications.map((notification) =>
-          notification.transactionId === transactionId
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.transactionId === transactionId
             ? {
-                ...notification,
+                ...n,
                 message: "Pickup proposal rejected",
                 status: "read",
+                pickupDetails: {
+                  ...n.pickupDetails,
+                  status: "rejected",
+                },
               }
-            : notification
+            : n
         )
       );
     } catch (error) {
@@ -110,11 +137,12 @@ function Notifications() {
         <p>No new notifications.</p>
       ) : (
         notifications.map((notification) => (
-          <div key={notification._id} className="notification-card">
+          <div key={notification._id || notification.transactionId} className="notification-card">
             <p>{notification.message}</p>
-            <small>{new Date(notification.createdAt).toLocaleString()}</small>
+            <small>{new Date(notification.createdAt || Date.now()).toLocaleString()}</small>
+
             {notification.pickupDetails &&
-              notification.pickupDetails?.status === "pending" && (
+              notification.pickupDetails.status === "pending" && (
                 <div className="pickup-details">
                   <p>
                     <strong>Pickup Location:</strong>{" "}
@@ -122,26 +150,21 @@ function Notifications() {
                   </p>
                   <p>
                     <strong>Pickup Date:</strong>{" "}
-                    {new Date(
-                      notification.pickupDetails.pickupDateTime
-                    ).toLocaleString()}
+                    {new Date(notification.pickupDetails.pickupDateTime).toLocaleString()}
                   </p>
                   <button
-                    onClick={() =>
-                      handleAcceptPickup(notification.transactionId)
-                    }
+                    onClick={() => handleAcceptPickup(notification.transactionId)}
                   >
                     Accept
                   </button>
                   <button
-                    onClick={() =>
-                      handleRejectPickup(notification.transactionId)
-                    }
+                    onClick={() => handleRejectPickup(notification.transactionId)}
                   >
                     Reject
                   </button>
                 </div>
               )}
+
             {notification.pickupDetails?.status !== "pending" && (
               <div className="pickup-details">
                 <p>
@@ -154,6 +177,7 @@ function Notifications() {
                 </p>
               </div>
             )}
+
             {notification.status === "pending" && (
               <button
                 className="mark-read-btn"
