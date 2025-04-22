@@ -70,7 +70,7 @@ const proposePickup = async (req, res) => {
   try {
     const { transactionId } = req.params;
     const { location, pickupDateTime } = req.body;
-    const userId = req.user?.id || "anonymous";
+    const userId = req.user?.id;
 
     const transaction = await Transaction.findById(transactionId);
     if (!transaction) return res.status(404).json({ message: "Transaction not found" });
@@ -227,6 +227,35 @@ const deleteTransaction = async (req, res) => {
   }
 };
 
+const getUserTransactions = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const transactions = await Transaction.find({
+      $or: [
+        { donorId: userId },
+        { recipientId: userId }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate("donationId")
+      .populate("requestId")
+      .populate("itemId");
+
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ message: "No transactions found for this user" });
+    }
+
+    res.status(200).json({
+      message: "User transactions fetched successfully",
+      transactions
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user transactions", error: error.message });
+  }
+};
+
+
 module.exports = {
   createTransaction,
   getTransaction,
@@ -234,5 +263,6 @@ module.exports = {
   proposePickup,
   respondToPickup,
   completeTransaction,
-  deleteTransaction
+  deleteTransaction,
+  getUserTransactions
 };

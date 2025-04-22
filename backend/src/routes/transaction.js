@@ -6,7 +6,8 @@ const {
     respondToPickup,
     completeTransaction,
     getTransaction,
-    deleteTransaction
+    deleteTransaction,
+    getUserTransactions
 } = require("../controllers/transaction");
 const {authMiddleware} = require("../middlewares/auth");
 
@@ -15,6 +16,7 @@ router.post("/createTransaction",authMiddleware,createTransaction);
 router.post("/proposePickup/:transactionId",authMiddleware,proposePickup);
 router.post("/respondToPickup/:transactionId",authMiddleware,respondToPickup);
 router.post("/completeTransaction/:transactionId",authMiddleware,completeTransaction);
+router.get("/myTransactions",authMiddleware,getUserTransactions);
 router.get("/getTransaction/:transactionId",authMiddleware,getTransaction);
 router.delete("/deleteTransaction/:transactionId",authMiddleware,deleteTransaction);
 

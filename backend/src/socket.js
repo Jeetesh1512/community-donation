@@ -4,7 +4,7 @@ function setSocketIO(io){
     ioInstance=io;
 }
 
-function getSocketIO(io){
+function getSocketIO(){
     return ioInstance;
 }
 

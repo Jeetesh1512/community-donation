@@ -11,6 +11,8 @@ const requestRoute = require("./routes/request");
 const transactionRoute = require("./routes/transaction");
 const impactRoute = require("./routes/impact");
 const notificationRoute = require("./routes/notification");
+const messageRoute = require("./routes/message");
+const {setSocketIO} = require("./socket");
 
 dotenv.config();
 
@@ -25,6 +27,7 @@ const io = new Server(server, {
     credentials: true
   }
 });
+setSocketIO(io);
 
 app.set("io", io);
 
@@ -60,7 +63,8 @@ app.use("/api/donations", donationRoute);
 app.use("/api/requests", requestRoute);
 app.use("/api/transactions", transactionRoute);
 app.use("/api/impact", impactRoute);
-app.use("/api/notifications",notificationRoute);
+app.use("/api/notifications", notificationRoute);
+app.use("/api/messages",messageRoute);
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -69,16 +73,6 @@ io.on("connection", (socket) => {
     socket.join(userId);
     console.log(`User ${socket.id} joined room ${userId}`);
   });
-
-  socket.on("pickupProposal", (data) => {
-    console.log("Pickup proposal received", data);
-    io.to(data.donorId).emit("pickupProposalNotification", data);
-  });
-
-  socket.on("pickupResponseNotification", (data) => {
-    alert(`${data.message}: ${data.response}`);
-  });
-
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });

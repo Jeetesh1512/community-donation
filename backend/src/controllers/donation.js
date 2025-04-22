@@ -65,6 +65,8 @@ const createDonation = async (req, res) => {
         const maxDistanceInMeters = 1000000; // 10km
 
         const matchingRequests = await Request.find({
+            requestType:"public",
+            isCompleted:false,
             itemType: category,
             status: "pending",
             coordinates: {
@@ -265,8 +267,27 @@ const getDonations = async (req, res) => {
     }
 };
 
+const getUserDonations = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const donations = await Donation.find({ donorId: userId })
+            .populate({
+                path: "itemId",
+                model: "Item"
+            })
+            .sort({ createdAt: -1 });
+
+        res.json({ donations });
+    } catch (error) {
+        console.error("Error fetching user donations:", error);
+        res.status(500).json({ message: "Error fetching user donations", error });
+    }
+};
+
 module.exports = {
     createDonation,
     getDonations,
-    getDonation
+    getDonation,
+    getUserDonations,
 };

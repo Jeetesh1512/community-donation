@@ -11,6 +11,8 @@ import Home from "./pages/Home/Home";
 import RequestDonation from "./pages/RequestDonation/RequestDonation"
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import TransactionChat from "./pages/TransactionChat/TransactionChat";
+import PickupProposalModal from "./components/PickupProposal/PickupProposal";
 
 axios.defaults.withCredentials = true;
 
@@ -75,8 +77,16 @@ function App() {
             element={authenticated ? <Home /> : <Navigate to="/" />}
           />
           <Route
-            path="/:id/request"
+            path="/:donationId/request"
             element = {authenticated ? <RequestDonation/> :  <Navigate to="/" />}
+          />
+          <Route
+            path="/:transactionId/chat"
+            element = {authenticated ? <TransactionChat/> :  <Navigate to="/" />}
+          />
+          <Route
+            path="/:transactionId/proposePickup"
+            element = {authenticated ? <PickupProposalModal/> :  <Navigate to="/" />}
           />
         </Routes>
       </BrowserRouter>

@@ -6,7 +6,7 @@ const { sendNotificationEmail } = require("../utils/mailer");
 
 const createRequest = async (req, res) => {
     try {
-        const { itemType, description, quantity, condition, urgency } = req.body;
+        const { itemType, description, quantity, condition, urgency, requestType } = req.body;
 
         const user = await User.findById(req.user.id);
         const { lat, lng } = user.coordinates;
@@ -18,6 +18,7 @@ const createRequest = async (req, res) => {
             quantity,
             condition,
             urgency,
+            requestType,
             coordinates: {
                 type: "Point",
                 coordinates: [lng, lat]
@@ -37,32 +38,33 @@ const createRequest = async (req, res) => {
             }
         );
 
-        const maxDistanceInMeters = 1000000; 
+        if (requestType === "public") {
+            const maxDistanceInMeters = 1000000;
 
-        const matchingDonations = await Donation.find({
-            status: "pending",
-            coordinates: {
-                $near: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [lng, lat]
-                    },
-                    $maxDistance: maxDistanceInMeters
+            const matchingDonations = await Donation.find({
+                status: "pending",
+                coordinates: {
+                    $near: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [lng, lat]
+                        },
+                        $maxDistance: maxDistanceInMeters
+                    }
                 }
-            }
-        }).populate({
-            path: "itemId",
-            match: { category: itemType }
-        }).populate("donorId");
+            }).populate({
+                path: "itemId",
+                match: { category: itemType }
+            }).populate("donorId");
 
-        for (let donation of matchingDonations) {
-            if (!donation.itemId) continue; // skip non-matching category
+            for (let donation of matchingDonations) {
+                if (!donation.itemId) continue;
 
-            if (donation.donorId?.email) {
-                await sendNotificationEmail(
-                    donation.donorId.email,
-                    "🚨 Someone needs your donation!",
-                    `
+                if (donation.donorId?.email) {
+                    await sendNotificationEmail(
+                        donation.donorId.email,
+                        "🚨 Someone needs your donation!",
+                        `
 Hi ${donation.donorId.name},
 
 Your donation "${donation.itemId.name}" has been matched with a nearby request.
@@ -79,14 +81,14 @@ Please log in to your account to respond to the request.
 Thank you,  
 The Community Donation Platform Team
                     `
-                );
-            }
+                    );
+                }
 
-            if (user.email) {
-                await sendNotificationEmail(
-                    user.email,
-                    "🎁 A donation matches your request!",
-                    `
+                if (user.email) {
+                    await sendNotificationEmail(
+                        user.email,
+                        "🎁 A donation matches your request!",
+                        `
 Hi ${user.name},
 
 We found a donation that matches your request for "${itemType}".
@@ -102,28 +104,27 @@ You can now propose a pickup location and date.
 
 Thanks for being part of our community!
                     `
-                );
+                    );
+                }
             }
         }
 
         res.status(201).json({ message: "Request created successfully", request: newRequest });
-
     } catch (error) {
         console.error("Error creating request:", error);
         res.status(500).json({ message: "Error creating request", error });
     }
 };
 
-
 const getRequests = async (req, res) => {
     try {
-        const requests = await Request.find({ isCompleted:false }).populate("userId", "name email address");
+        const requests = await Request.find({ isCompleted: false, requestType: "public" })
+            .populate("userId", "name email address");
         res.json(requests);
     } catch (error) {
         res.status(500).json({ message: "Error fetching requests", error });
     }
 };
-
 
 const getRequestsByFilters = async (req, res) => {
     try {
@@ -139,7 +140,8 @@ const getRequestsByFilters = async (req, res) => {
 
         const filterConditions = {
             urgency,
-            isCompleted:false,
+            isCompleted: false,
+            requestType: "public"
         };
 
         if (condition !== "any") {
@@ -150,19 +152,14 @@ const getRequestsByFilters = async (req, res) => {
 
         const calculateDistance = (lat1, lon1, lat2, lon2) => {
             const toRad = (angle) => (angle * Math.PI) / 180;
-            const R = 6371; // Radius of Earth in km
-
+            const R = 6371;
             const dLat = toRad(lat2 - lat1);
             const dLon = toRad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) ** 2;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c * 1000; // convert to meters
+            return R * c * 1000;
         };
 
-        // Calculate distance using request.coordinates
         requests = requests.map((request) => {
             const coords = request.coordinates;
             if (coords && coords.lat != null && coords.lng != null) {
@@ -178,14 +175,11 @@ const getRequestsByFilters = async (req, res) => {
             return request;
         });
 
-        // Filter by max distance
         const maxDistanceNum = parseFloat(maxDistance);
         requests = requests.filter(req => req._doc.distance <= maxDistanceNum);
 
-        // Sort by distance
         requests.sort((a, b) => a._doc.distance - b._doc.distance);
 
-        // Pagination
         const startIndex = (parseInt(page) - 1) * parseInt(limit);
         const paginatedRequests = requests.slice(startIndex, startIndex + parseInt(limit));
 
@@ -201,23 +195,23 @@ const getRequestsByFilters = async (req, res) => {
     }
 };
 
-
 const getMatchingDonations = async (req, res) => {
     try {
         const requestId = req.params.id;
         const { maxDistance = 50000, page = 1, limit = 1 } = req.query;
 
         const request = await Request.findById(requestId).populate("userId");
-        if (!request) {
-            return res.status(404).json({ message: "Request not found" });
+        if (!request) return res.status(404).json({ message: "Request not found" });
+
+        if (request.requestType !== "public") {
+            return res.status(403).json({ message: "Matching is only allowed for public requests" });
         }
 
         const requestLat = request.coordinates.lat;
         const requestLng = request.coordinates.lng;
 
         const allConditions = ["new", "like new", "mildly used", "heavily used", "needs repair"];
-
-        let matchCondition = {
+        const matchCondition = {
             category: request.itemType,
             status: "available",
         };
@@ -226,7 +220,6 @@ const getMatchingDonations = async (req, res) => {
 
         if (request.description) {
             const words = request.description.split(/\s+/).filter(word => word.length > 2);
-
             pipeline.push({
                 $search: {
                     index: "items",
@@ -276,15 +269,9 @@ const getMatchingDonations = async (req, res) => {
         const calculateDistance = (lat1, lon1, lat2, lon2) => {
             const toRad = (angle) => (angle * Math.PI) / 180;
             const R = 6371;
-
             const dLat = toRad(lat2 - lat1);
             const dLon = toRad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) *
-                Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) *
-                Math.sin(dLon / 2);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         };
@@ -304,7 +291,7 @@ const getMatchingDonations = async (req, res) => {
         });
 
         const maxDistanceNum = parseFloat(maxDistance);
-        matchingDonations = matchingDonations.filter(donation => donation._doc.distance <= maxDistanceNum);
+        matchingDonations = matchingDonations.filter(d => d._doc.distance <= maxDistanceNum);
 
         matchingDonations.sort((a, b) => a._doc.distance - b._doc.distance);
 
@@ -323,10 +310,23 @@ const getMatchingDonations = async (req, res) => {
     }
 };
 
+const getUserRequests = async (req, res) => {
+    try {
+        const requests = await Request.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .populate("userId", "name email address");
+
+        res.status(200).json({ total: requests.length, requests });
+    } catch (error) {
+        console.error("Error fetching user's requests:", error);
+        res.status(500).json({ message: "Error fetching user's requests", error });
+    }
+};
 
 module.exports = {
     createRequest,
     getRequests,
     getMatchingDonations,
-    getRequestsByFilters
+    getRequestsByFilters,
+    getUserRequests
 };

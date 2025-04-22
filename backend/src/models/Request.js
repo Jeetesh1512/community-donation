@@ -20,6 +20,11 @@ const RequestSchema = new mongoose.Schema({
             required: true,
         },
     },
+    requestType:{
+        type:String,
+        enum:["public","personal"],
+        default:"public",
+    },
     createdAt: { type: Date, default: Date.now },
 });
 
