@@ -52,7 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.resolve("src/uploads")));
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://community-donation-frontend.vercel.app/",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
