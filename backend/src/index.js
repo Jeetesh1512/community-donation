@@ -23,7 +23,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: "https://community-donation-frontend.vercel.app/",
+    origin: process.env.FRONT_URL,
     credentials: true
   }
 });
@@ -52,7 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.resolve("src/uploads")));
 
 app.use(cors({
-  origin: "https://community-donation-frontend.vercel.app/",
+  origin: process.env.FRONT_URL,
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
