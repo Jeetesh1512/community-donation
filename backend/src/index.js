@@ -79,8 +79,12 @@ io.on("connection", (socket) => {
   });
 });
 
+//check
+app.get("/", (req, res) => {
+  res.send("Community Donation Platform Backend is running.");
+});
 // Start server
 server.listen(process.env.PORT, async () => {
   await connect();
-  console.log(`Server is running on port 8080 ${process.env.PORT}`);
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
