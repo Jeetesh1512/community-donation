@@ -9,7 +9,7 @@ import Impact from "../../components/Impact/Impact";
 import Notifications from "../../components/Notifications/Notifications";
 
 function Home() {
-  const [activeTab, setActiveTab] = useState("requests");
+  const [activeTab, setActiveTab] = useState("donations");
 
   return (
     <>

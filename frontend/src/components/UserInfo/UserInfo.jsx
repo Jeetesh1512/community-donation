@@ -6,7 +6,7 @@ import axios from "axios";
 
 function UserInfo() {
   const [profileTab, setProfileTab] = useState("profile");
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading, logout } = useContext(AuthContext);
 
   const [requests, setRequests] = useState([]);
   const [donations, setDonations] = useState([]);
@@ -92,6 +92,12 @@ function UserInfo() {
               <p>Name: {user?.name}</p>
               <p>Email: {user?.email}</p>
               <p>Address: {user?.address}</p>
+              <button className="btn" onClick={async ()=>{
+                const confirmLogout = window.confirm("Are you sure you want to log out?");
+                if (!confirmLogout) return;
+                await logout();
+                navigate("/");
+              }}>Log Out</button>
             </div>
           )}
           {profileTab === "myRequests" && (

@@ -6,7 +6,7 @@ function Impact() {
   const [impactData, setImpactData] = useState({
     totalDonations: 0,
     totalPeopleHelped: 0,
-    totalDonors: 0,
+    distinctDonors: 0,
     totalQuantityDonated: 0,
   });
 
@@ -38,7 +38,7 @@ function Impact() {
           <div className="stat-text">Items Donated</div>
         </div>
         <div className="stat">
-          <div className="stat-number">{impactData.totalDonors}</div>
+          <div className="stat-number">{impactData.distinctDonors}</div>
           <div className="stat-text">Donors</div>
         </div>
         <div className="stat">

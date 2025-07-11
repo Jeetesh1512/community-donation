@@ -10,11 +10,31 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  const logout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/logout`,
+        {},
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setAuthenticated(false);
+      setUser(null);
+      setIsAdmin(false);
+      setUserId(null);
+    }
+  };
+
   const checkAuth = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users/authCheck`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/authCheck`,
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data?.authenticated) {
         setAuthenticated(true);
@@ -44,7 +64,17 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ authenticated, setAuthenticated, isAdmin, user, setUser, checkAuth, loading, userId }}
+      value={{
+        authenticated,
+        setAuthenticated,
+        isAdmin,
+        user,
+        setUser,
+        checkAuth,
+        loading,
+        userId,
+        logout
+      }}
     >
       {children}
     </AuthContext.Provider>

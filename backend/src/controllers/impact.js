@@ -16,7 +16,8 @@ const getImpactStats = async (req, res) => {
         const totalPeopleHelped = distinctRecipients.length;
 
         // Count total distinct donors
-        const totalDonors = await Donation.distinct("donorId").countDocuments({});
+        const totalDonors = await Donation.distinct("donorId");
+        const distinctDonors=totalDonors.length;
 
         // Aggregate total quantity of donated items
         const donatedItems = await Item.aggregate([
@@ -29,7 +30,7 @@ const getImpactStats = async (req, res) => {
         res.json({
             totalDonations,
             totalPeopleHelped,
-            totalDonors,
+            distinctDonors,
             totalQuantityDonated,
         });
     } catch (error) {
