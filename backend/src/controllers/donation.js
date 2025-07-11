@@ -2,6 +2,7 @@ const Donation = require("../models/Donation");
 const Item = require("../models/Item");
 const User = require("../models/User.js")
 const Request = require("../models/Request.js")
+const { sendNotificationEmail } = require("../utils/mailer.js")
 const { cloudinary } = require("../middlewares/cloudinary.js");
 
 const createDonation = async (req, res) => {
@@ -62,13 +63,12 @@ const createDonation = async (req, res) => {
             }
         );
 
-        const maxDistanceInMeters = 1000000; // 10km
+        const maxDistanceInMeters = 1000000000;
 
         const matchingRequests = await Request.find({
             requestType:"public",
             isCompleted:false,
             itemType: category,
-            status: "pending",
             coordinates: {
                 $near: {
                     $geometry: {

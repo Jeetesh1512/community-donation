@@ -39,7 +39,7 @@ const createRequest = async (req, res) => {
         );
 
         if (requestType === "public") {
-            const maxDistanceInMeters = 1000000;
+            const maxDistanceInMeters = 1000000000;
 
             const matchingDonations = await Donation.find({
                 status: "pending",
