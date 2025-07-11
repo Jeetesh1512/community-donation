@@ -62,7 +62,6 @@ function Signup() {
 
       alert("Registered successfully!");
       navigate("/login");
-      console.log(res.data);
     } catch (err) {
       console.error("Error during registration:", err);
       alert(err.response?.data?.message || "Something went wrong!");

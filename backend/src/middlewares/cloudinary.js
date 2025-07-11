@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params:{
         folder:"community-donations",
-        allowed_formats:["jpg","png","jpeg","avif"],
+        allowed_formats:["jpg","png","jpeg","avif","webp","svg"],
     },
 });
 
