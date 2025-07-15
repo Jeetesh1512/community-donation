@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { loadGoogleMapsScript } from "../../utils/loadGoogleMapsScripts";
+import React, { useState } from "react";
 import { FaLocationArrow } from "react-icons/fa";
-import { initMap } from "../../utils/mapUtils";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import LocationMap from "../../components/LocationMap/LocationMap";
 import "./Signup.css";
 
 function Signup() {
@@ -21,16 +20,6 @@ function Signup() {
     password: "",
   });
 
-  useEffect(() => {
-    loadGoogleMapsScript().then(() => {
-      window.initMap = () => {
-        const goToLocationFn = initMap(setLatLng, setAddress);
-        setGoToMyLocation(() => goToLocationFn);
-        goToLocationFn();
-      };
-    });
-  }, []);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -40,30 +29,22 @@ function Signup() {
 
     try {
       const payload = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        address: address,
-        coordinates: {
-          lat: latLng.lat,
-          lng: latLng.lng,
-        },
+        ...formData,
+        address,
+        coordinates: latLng,
         isAdmin: false,
       };
 
-      const res = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/users/register`,
         payload,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
 
       alert("Registered successfully!");
       navigate("/login");
     } catch (err) {
-      console.error("Error during registration:", err);
+      console.error("Registration error:", err);
       alert(err.response?.data?.message || "Something went wrong!");
     }
   };
@@ -87,11 +68,7 @@ function Signup() {
         {/* Main Content */}
         <div className="main-content">
           <div className="form-map-wrapper">
-            <form
-              id="signupForm"
-              className="form-column"
-              onSubmit={handleSubmit}
-            >
+            <form id="signupForm" className="form-column" onSubmit={handleSubmit}>
               <div className="signup-header">
                 <h2>Sign up & manage fundraisers, donations & more</h2>
               </div>
@@ -126,15 +103,11 @@ function Signup() {
                   onChange={handleChange}
                 />
               </div>
-              <div
-                className="form-group password-field"
-                style={{ position: "relative" }}
-              >
+              <div className="form-group password-field" style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   placeholder="Password"
-                  name="password"
                   required
                   value={formData.password}
                   onChange={handleChange}
@@ -170,10 +143,11 @@ function Signup() {
               <label style={{ marginBottom: "10px", display: "block" }}>
                 Location (Click on the map)
               </label>
-              <div
-                id="map"
-                style={{ width: "100%", height: "300px", borderRadius: "8px" }}
-              ></div>
+              <LocationMap
+                setLatLng={setLatLng}
+                setAddress={setAddress}
+                setGoToMyLocation={setGoToMyLocation}
+              />
               <div
                 id="coordinates"
                 style={{ marginTop: "10px", color: "#555", fontSize: "14px" }}
@@ -195,11 +169,11 @@ function Signup() {
             </div>
           </div>
           <div className="login-prompt">
-          <span>Already a member?</span>
-          <Link to="/login" className="login-prompt-p">
-            Log In
-          </Link>
-        </div>
+            <span>Already a member?</span>
+            <Link to="/login" className="login-prompt-p">
+              Log In
+            </Link>
+          </div>
         </div>
       </div>
     </div>

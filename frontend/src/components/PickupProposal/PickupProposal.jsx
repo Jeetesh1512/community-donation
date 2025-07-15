@@ -1,27 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import { loadGoogleMapsScript } from "../../utils/loadGoogleMapsScripts";
-import { initMap } from "../../utils/mapUtils";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import LocationMap from "../../components/LocationMap/LocationMap";
 
 const PickupProposalModal = () => {
   const [latLng, setLatLng] = useState({ lat: "", lng: "" });
   const [address, setAddress] = useState("");
   const [pickupDateTime, setPickupDateTime] = useState("");
-  const [goToMyLocation, setGoToMyLocation] = useState(null);
   const navigate = useNavigate();
-  const {transactionId} = useParams();
-
-  useEffect(() => {
-    loadGoogleMapsScript().then(() => {
-      window.initMap = () => {
-        const goToLocationFn = initMap(setLatLng, setAddress);
-        setGoToMyLocation(() => goToLocationFn);
-        goToLocationFn();
-      };
-    });
-  }, []);
+  const { transactionId } = useParams();
 
   const handlePickupSubmit = async () => {
     try {
@@ -30,18 +17,21 @@ const PickupProposalModal = () => {
         { location: { lat: latLng.lat, lng: latLng.lng, address }, pickupDateTime },
         { withCredentials: true }
       );
-      navigate(`/home`);
+      alert("Pickup proposal submitted!");
+      navigate("/home");
     } catch (err) {
       console.error("Error proposing pickup:", err);
+      alert("Error proposing pickup");
     }
   };
 
   return (
     <div className="pickup-proposal-modal">
       <h2>Propose Pickup</h2>
+
       <label>Pickup Location</label>
-      <div id="map" style={{ height: "300px", width: "100%" }}></div>
-      <div>{address}</div>
+      <LocationMap setLatLng={setLatLng} setAddress={setAddress} />
+      <div>{address || "Click on the map to select location"}</div>
 
       <label>Pickup Date and Time</label>
       <input
