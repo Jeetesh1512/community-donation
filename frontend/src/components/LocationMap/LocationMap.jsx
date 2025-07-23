@@ -36,8 +36,16 @@ export default function LocationMap({
 
         if (markerRef.current) markerRef.current.map = null;
 
+      //   const div = document.createElement("div");
+      // div.style.background = "green";
+      // div.style.width = "16px";
+      // div.style.height = "16px";
+      // div.style.borderRadius = "50%";
+      // div.style.border = "2px solid white";
+
         markerRef.current = new AdvancedMarkerElement({
           map,
+          // content: div,
           position: latLng,
           title,
         });
